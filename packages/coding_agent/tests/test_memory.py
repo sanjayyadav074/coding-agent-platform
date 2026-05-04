@@ -54,7 +54,10 @@ def test_fifo_trim_concept() -> None:
     test. Here we just verify the Turn structure is compatible with the
     FIFO logic in ConversationStore.
     """
-    turns = [Turn(role="user" if i % 2 == 0 else "assistant", content=f"msg {i}") for i in range(25)]
+    turns = [
+        Turn(role="user" if i % 2 == 0 else "assistant", content=f"msg {i}")
+        for i in range(25)
+    ]
     # If we kept only the last 20:
     trimmed = turns[-20:]
     assert len(trimmed) == 20

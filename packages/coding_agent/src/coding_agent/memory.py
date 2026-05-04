@@ -43,7 +43,7 @@ class Turn:
         return {"role": self.role, "content": self.content}
 
     @classmethod
-    def from_dict(cls, d: dict[str, Any]) -> "Turn":
+    def from_dict(cls, d: dict[str, Any]) -> Turn:
         return cls(role=str(d["role"]), content=str(d["content"]))
 
 

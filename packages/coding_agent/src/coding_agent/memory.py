@@ -19,8 +19,8 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-import aioboto3
-from botocore.config import Config as BotoConfig
+import aioboto3  # type: ignore[import-untyped]
+from botocore.config import Config as BotoConfig  # type: ignore[import-untyped]
 
 from .logging import get_logger
 

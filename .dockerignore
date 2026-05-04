@@ -1,0 +1,16 @@
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/.venv
+**/venv
+**/.git
+**/.github
+**/dist
+**/build
+**/*.egg-info
+**/node_modules
+infra
+deploy
+docs
+*.md

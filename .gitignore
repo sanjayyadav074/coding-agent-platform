@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+!example.tfvars
+.terraform.lock.hcl
+
+# Helm
+**/charts/*.tgz
+
+# Runtime
+*.pid
+*.log
+
+# Documentation (keep only what's referenced in README.md)
+SUBMISSION_CHECKLIST.md
+PRODUCTION_DEPLOY.md
+DEEP_DIVE.md

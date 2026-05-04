@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "coding-agent.fullname" . }}-worker
+  labels: {{- include "coding-agent.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  {{- if not .Values.worker.autoscaling.enabled }}
+  replicas: {{ .Values.worker.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "coding-agent.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels: {{- include "coding-agent.labels" . | nindent 8 }}
+        app.kubernetes.io/component: worker
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+    spec:
+      serviceAccountName: {{ include "coding-agent.serviceAccountName" . }}
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: worker
+          image: {{ include "coding-agent.workerImage" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["python", "/app/services/worker/worker.py"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "coding-agent.fullname" . }}-config
+            - secretRef:
+                name: {{ include "coding-agent.fullname" . }}-secrets
+          resources: {{- toYaml .Values.worker.resources | nindent 12 }}
+          securityContext: {{- toYaml .Values.securityContext | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- if .Values.worker.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "coding-agent.fullname" . }}-worker
+  labels: {{- include "coding-agent.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "coding-agent.fullname" . }}-worker
+  minReplicas: {{ .Values.worker.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.worker.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.worker.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}
+{{- if .Values.worker.podDisruptionBudget.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "coding-agent.fullname" . }}-worker
+  labels: {{- include "coding-agent.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.worker.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "coding-agent.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: worker
+{{- end }}

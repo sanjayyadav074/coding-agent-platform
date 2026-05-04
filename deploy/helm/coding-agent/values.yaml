@@ -1,0 +1,115 @@
+image:
+  repository: ghcr.io/your-org/coding-agent
+  pullPolicy: IfNotPresent
+  tag: ""  # defaults to .Chart.AppVersion
+
+imagePullSecrets: []
+
+# Slack and provider credentials are stored in a Kubernetes Secret. By default
+# the chart creates one from `secrets:` below. To use AWS Secrets Manager via
+# External Secrets Operator, set externalSecret.enabled=true.
+secrets:
+  SLACK_BOT_TOKEN: ""
+  SLACK_SIGNING_SECRET: ""
+  GROQ_API_KEY: ""
+  GITHUB_TOKEN: ""
+
+externalSecret:
+  enabled: false
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  remoteName: coding-agent/credentials
+
+config:
+  LLM_MODEL: "groq:llama-3.3-70b-versatile"
+  TEMPORAL_HOST: "temporal-frontend.temporal.svc.cluster.local:7233"
+  TEMPORAL_NAMESPACE: "default"
+  TEMPORAL_TASK_QUEUE: "coding-task-queue"
+  USE_GITHUB_MOCK: "false"
+  GITHUB_DEFAULT_REPO: "octocat/Hello-World"
+  CONVERSATIONS_TABLE: ""
+  AWS_REGION: "us-east-1"
+  HISTORY_MAX_TURNS: "20"
+  LOG_LEVEL: "INFO"
+  ENVIRONMENT: "production"
+
+api:
+  replicaCount: 2
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 8000
+  ingress:
+    enabled: true
+    className: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+    hosts:
+      - host: coding-agent.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+worker:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 70
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+serviceAccount:
+  create: true
+  # When deploying to EKS with IRSA, set the IAM role ARN here.
+  annotations: {}
+  name: ""
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+networkPolicy:
+  enabled: true
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

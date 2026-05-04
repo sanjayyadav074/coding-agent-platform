@@ -1,0 +1,47 @@
+{{- if .Values.networkPolicy.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "coding-agent.fullname" . }}-default-deny
+  labels: {{- include "coding-agent.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "coding-agent.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Temporal frontend
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: temporal
+      ports:
+        - protocol: TCP
+          port: 7233
+    # Egress to external HTTPS (Slack, GitHub, LLM provider). Pods need it.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 169.254.169.254/32  # block IMDS
+      ports:
+        - protocol: TCP
+          port: 443
+  ingress:
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 8000
+{{- end -}}

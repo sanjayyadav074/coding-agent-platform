@@ -1,0 +1,13 @@
+Coding Agent Platform installed.
+
+Slack endpoint:
+{{- if .Values.api.ingress.enabled }}
+  https://{{ (index .Values.api.ingress.hosts 0).host }}/slack/events
+{{- else }}
+  Use `kubectl port-forward svc/{{ include "coding-agent.fullname" . }}-api 8000:80`
+  then point Slack at https://<your-public-tunnel>/slack/events
+{{- end }}
+
+Inspect Temporal workflows:
+  kubectl -n temporal port-forward svc/temporal-web 8080:8080
+  open http://localhost:8080

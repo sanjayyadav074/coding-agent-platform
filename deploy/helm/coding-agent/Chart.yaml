@@ -1,0 +1,13 @@
+apiVersion: v2
+name: coding-agent
+description: Slack-driven coding agent backed by Pydantic AI and Temporal
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - slack
+  - temporal
+  - pydantic-ai
+  - coding-agent
+maintainers:
+  - name: Coding Agent Platform

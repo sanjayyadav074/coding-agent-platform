@@ -1,0 +1,14 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+temporalio>=1.6
+python-multipart>=0.0.9
+prometheus-client>=0.20
+fastapi>=0.100.0
+uvicorn[standard]
+pydantic-ai>=0.3.0
+temporalio>=1.3.0
+requests
+groq
+python-multipart
+
+
